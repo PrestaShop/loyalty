@@ -42,7 +42,7 @@ class Loyalty extends Module
 	{
 		$this->name = 'loyalty';
 		$this->tab = 'pricing_promotion';
-		$this->version = '1.14';
+		$this->version = '1.15';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
@@ -52,7 +52,6 @@ class Loyalty extends Module
 		$this->displayName = $this->l('Customer loyalty and rewards');
 		$this->description = $this->l('Provide a loyalty program to your customers.');
 		$this->confirmUninstall = $this->l('Are you sure you want to delete all loyalty points and customer history?');
-		$this->ps_versions_compliancy = array('min' => '1.5.6.1', 'max' => _PS_VERSION_);
 	}
 
 	private function instanceDefaultStates()
