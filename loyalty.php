@@ -626,9 +626,9 @@ class Loyalty extends Module
 					),
 					array(
 						'type' => 'categories',
-						'label' => $this->l('Vouchers created by the loyalty system can be used in the following categories :'),
+						'label' => $this->l('Vouchers created by the loyalty system can be used in the following categories:'),
 						'name' => 'categoryBox',
-						'desc' => $this->l('Mark the box(es) of categories in which loyalty vouchers are usable.'),
+						'desc' => $this->l('Mark the boxes of categories in which loyalty vouchers can be used.'),
 						'tree' => array(
 							'use_search' => false,
 							'id' => 'categoryBox',
