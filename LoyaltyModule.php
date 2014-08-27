@@ -198,7 +198,7 @@ class LoyaltyModule extends ObjectModel
 		return Db::getInstance()->executeS($query);
 	}
 
-	public static function getDiscountByIdCustomer($id_customer, $last=false)
+	public static function getDiscountByIdCustomer($id_customer, $last = false)
 	{
 		$query = '
 		SELECT f.id_cart_rule AS id_cart_rule, f.date_upd AS date_add
@@ -208,7 +208,7 @@ class LoyaltyModule extends ObjectModel
 		AND f.`id_cart_rule` > 0
 		AND o.`valid` = 1
 		GROUP BY f.id_cart_rule';
-		if ($last === true)
+		if ($last == true)
 			$query.= ' ORDER BY f.id_loyalty DESC LIMIT 0,1';
 
 		return Db::getInstance()->executeS($query);
