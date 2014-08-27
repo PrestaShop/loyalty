@@ -208,7 +208,7 @@ class LoyaltyModule extends ObjectModel
 		AND f.`id_cart_rule` > 0
 		AND o.`valid` = 1
 		GROUP BY f.id_cart_rule';
-		if ($last == true)
+		if ($last)
 			$query.= ' ORDER BY f.id_loyalty DESC LIMIT 0,1';
 
 		return Db::getInstance()->executeS($query);
