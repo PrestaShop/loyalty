@@ -225,7 +225,7 @@ class LoyaltyModule extends ObjectModel
 			$lm = new LoyaltyModule((int)$item['id_loyalty']);
 
 			/* Check for negative points for this order */
-			$negativePoints = (int)Db::getInstance()->getValue('SELECT SUM(points) points FROM '._DB_PREFIX_.'loyalty WHERE id_order = '.(int)$item->id_order.' AND id_loyalty_state = '.(int)LoyaltyStateModule::getCancelId().' AND points < 0');
+			$negativePoints = (int)Db::getInstance()->getValue('SELECT SUM(points) points FROM '._DB_PREFIX_.'loyalty WHERE id_order = '.(int)$item['id'].' AND id_loyalty_state = '.(int)LoyaltyStateModule::getCancelId().' AND points < 0');
 
 			if ($lm->points + $negativePoints <= 0)
 				continue;
