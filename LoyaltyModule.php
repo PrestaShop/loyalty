@@ -206,10 +206,10 @@ class LoyaltyModule extends ObjectModel
 		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (f.`id_order` = o.`id_order`)
 		WHERE f.`id_customer` = '.(int)($id_customer).'
 		AND f.`id_cart_rule` > 0
-		AND o.`valid` = 1';
+		AND o.`valid` = 1
+		GROUP BY f.id_cart_rule';
 		if ($last === true)
 			$query.= ' ORDER BY f.id_loyalty DESC LIMIT 0,1';
-		$query.= ' GROUP BY f.id_cart_rule';
 
 		return Db::getInstance()->executeS($query);
 	}
