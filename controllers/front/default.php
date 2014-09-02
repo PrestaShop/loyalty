@@ -76,6 +76,7 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			$cart_rule->reduction_currency = (int)$this->context->currency->id;
 			$cart_rule->reduction_amount = LoyaltyModule::getVoucherValue((int)$customer_points);
 			$cart_rule->quantity = 1;
+			$cart_rule->highlight = 1;
 			$cart_rule->quantity_per_user = 1;
 
 			// If merchandise returns are allowed, the voucher musn't be usable before this max return date
@@ -119,18 +120,18 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			//Restrict cartRules with categories
 			if ($contains_categories)
 			{
-				
+
 				//Creating rule group
 				$id_cart_rule = (int)$cart_rule->id;
 				$sql = "INSERT INTO "._DB_PREFIX_."cart_rule_product_rule_group (id_cart_rule, quantity) VALUES ('$id_cart_rule', 1)";
 				Db::getInstance()->execute($sql);
 				$id_group = (int)Db::getInstance()->Insert_ID();
-				
+
 				//Creating product rule
 				$sql = "INSERT INTO "._DB_PREFIX_."cart_rule_product_rule (id_product_rule_group, type) VALUES ('$id_group', 'categories')";
 				Db::getInstance()->execute($sql);
 				$id_product_rule = (int)Db::getInstance()->Insert_ID();
-				
+
 				//Creating restrictions
 				$values = array();
 				foreach ($categories as $category) {
@@ -141,8 +142,8 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 				$sql = "INSERT INTO "._DB_PREFIX_."cart_rule_product_rule_value (id_product_rule, id_item) VALUES $values";
 				Db::getInstance()->execute($sql);
 			}
-				
-				
+
+
 
 			// Register order(s) which contributed to create this voucher
 			if (!LoyaltyModule::registerDiscount($cart_rule))
