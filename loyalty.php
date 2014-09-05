@@ -27,6 +27,8 @@
 if (!defined('_PS_VERSION_'))
 	exit;
 
+include_once(dirname(__FILE__).'/LoyaltyModule.php');
+
 /*
 * TODO:
 *
@@ -70,6 +72,17 @@ class Loyalty extends Module
 	{
 		include_once(dirname(__FILE__).'/LoyaltyStateModule.php');
 
+		// Prepare tab
+		$tab = new Tab();
+		$tab->active = 1;
+		$tab->class_name = "AdminLoyalty";
+		$tab->name = array();
+		foreach (Language::getLanguages(true) as $lang)
+			$tab->name[$lang['id_lang']] = 'Loyalty';
+		$tab->id_parent = -1;
+		$tab->module = $this->name;
+		$tab->save();
+		
 		if (!parent::install() || !$this->installDB() || !$this->registerHook('extraRight') || !$this->registerHook('updateOrderStatus')
 			|| !$this->registerHook('newOrder')	|| !$this->registerHook('adminCustomers') || !$this->registerHook('shoppingCart')
 			|| !$this->registerHook('orderReturn') || !$this->registerHook('cancelProduct')	|| !$this->registerHook('customerAccount')
@@ -108,12 +121,14 @@ class Loyalty extends Module
 			`id_customer` INT UNSIGNED NOT NULL,
 			`id_order` INT UNSIGNED DEFAULT NULL,
 			`id_cart_rule` INT UNSIGNED DEFAULT NULL,
+			`id_external_ref` INT UNSIGNED DEFAULT NULL,
 			`points` INT NOT NULL DEFAULT 0,
 			`date_add` DATETIME NOT NULL,
 			`date_upd` DATETIME NOT NULL,
 			PRIMARY KEY (`id_loyalty`),
 			INDEX index_loyalty_loyalty_state (`id_loyalty_state`),
 			INDEX index_loyalty_order (`id_order`),
+			INDEX index_loyalty_external_ref (`id_external_ref`),
 			INDEX index_loyalty_discount (`id_cart_rule`),
 			INDEX index_loyalty_customer (`id_customer`)
 		) DEFAULT CHARSET=utf8 ;');
@@ -146,11 +161,27 @@ class Loyalty extends Module
 			UNIQUE KEY `index_unique_loyalty_state_lang` (`id_loyalty_state`,`id_lang`)
 		) DEFAULT CHARSET=utf8 ;');
 
+		Db::getInstance()->execute('
+		CREATE TABLE `'._DB_PREFIX_.'loyalty_text_lang` (
+			`id_loyalty` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+			`id_lang` INT UNSIGNED NOT NULL,
+			`name` varchar(64) NOT NULL,
+			UNIQUE KEY `index_unique_loyalty_text_lang` (`id_loyalty`,`id_lang`)
+		) DEFAULT CHARSET=utf8 ;');
+		
 		return true;
 	}
 
 	public function uninstall()
 	{
+		$id_tab = (int)Tab::getIdFromClassName('AdminLoyalty');
+
+		if ($id_tab)
+		{
+			$tab = new Tab($id_tab);
+			$tab->delete();
+		}
+		
 		if (!parent::uninstall() || !$this->uninstallDB() || !Configuration::deleteByName('PS_LOYALTY_POINT_VALUE')	|| !Configuration::deleteByName('PS_LOYALTY_POINT_RATE')
 			|| !Configuration::deleteByName('PS_LOYALTY_NONE_AWARD') || !Configuration::deleteByName('PS_LOYALTY_MINIMAL') || !Configuration::deleteByName('PS_LOYALTY_VOUCHER_CATEGORY')
 			|| !Configuration::deleteByName('PS_LOYALTY_VOUCHER_DETAILS') || !Configuration::deleteByName('PS_LOYALTY_TAX') || !Configuration::deleteByName('PS_LOYALTY_VALIDITY_PERIOD'))
@@ -164,7 +195,7 @@ class Loyalty extends Module
 		Db::getInstance()->execute('DROP TABLE `'._DB_PREFIX_.'loyalty_state`;');
 		Db::getInstance()->execute('DROP TABLE `'._DB_PREFIX_.'loyalty_state_lang`;');
 		Db::getInstance()->execute('DROP TABLE `'._DB_PREFIX_.'loyalty_history`;');
-
+		Db::getInstance()->execute('DROP TABLE `'._DB_PREFIX_.'loyalty_text_lang`;');
 		return true;
 	}
 
@@ -426,58 +457,102 @@ class Loyalty extends Module
 	/* Hook display in tab AdminCustomers on BO */
 	public function hookAdminCustomers($params)
 	{
+		return $this->displayLoyaltyForm($params);
+	}
+
+	protected function displayLoyaltyForm($params)
+	{
 		include_once(dirname(__FILE__).'/LoyaltyModule.php');
 		include_once(dirname(__FILE__).'/LoyaltyStateModule.php');
 
 		$customer = new Customer((int)$params['id_customer']);
 		if ($customer && !Validate::isLoadedObject($customer))
 			die($this->l('Incorrect Customer object.'));
-
-		$details = LoyaltyModule::getAllByIdCustomer((int)$params['id_customer'], (int)$params['cookie']->id_lang);
+			
 		$points = (int)LoyaltyModule::getPointsByCustomer((int)$params['id_customer']);
+			
+		$this->context->controller->addJqueryPlugin('tablednd');
+		$this->context->controller->addJS(_PS_JS_DIR_.'admin-dnd.js');
 
-		$html = '
-		<br /><h2>'.sprintf($this->l('Loyalty points (%d points)'), $points).'</h2>';
+		$this->_display = 'index';
+		$this->context->smarty->assign('tokenLoyalty', Tools::getAdminToken('AdminLoyalty'.(int)Tab::getIdFromClassName('AdminLoyalty').(int)$params['cookie']->id_employee));
 
-		if (!isset($points) || count($details) == 0)
-			return $html.' '.$this->l('This customer has no points');
-
-		$html .= '
-		<table cellspacing="0" cellpadding="0" class="table">
-			<tr style="background-color:#F5E9CF; padding: 0.3em 0.1em;">
-				<th>'.$this->l('Order').'</th>
-				<th>'.$this->l('Date').'</th>
-				<th>'.$this->l('Total (without shipping)').'</th>
-				<th>'.$this->l('Points').'</th>
-				<th>'.$this->l('Points Status').'</th>
-			</tr>';
-		foreach ($details as $key => $loyalty)
-		{
-			$url = 'index.php?tab=AdminOrders&id_order='.$loyalty['id'].'&vieworder&token='.Tools::getAdminToken('AdminOrders'.(int)Tab::getIdFromClassName('AdminOrders').(int)$params['cookie']->id_employee);
-			$html .= '
-			<tr style="background-color: '.($key % 2 != 0 ? '#FFF6CF' : '#FFFFFF').';">
-				<td>'.((int)$loyalty['id'] > 0 ? '<a style="color: #268CCD; font-weight: bold; text-decoration: underline;" href="'.$url.'">'.sprintf($this->l('#%d'), $loyalty['id']).'</a>' : '--').'</td>
-				<td>'.Tools::displayDate($loyalty['date']).'</td>
-				<td>'.((int)$loyalty['id'] > 0 ? $loyalty['total_without_shipping'] : '--').'</td>
-				<td>'.(int)$loyalty['points'].'</td>
-				<td>'.$loyalty['state'].'</td>
-			</tr>';
-		}
-		$html .= '
-			<tr>
-				<td>&nbsp;</td>
-				<td colspan="2" class="bold" style="text-align: right;">'.$this->l('Total points available:').'</td>
-				<td>'.$points.'</td>
-				<td>'.$this->l('Voucher value:').' '.Tools::displayPrice(
-				LoyaltyModule::getVoucherValue((int)$points, (int)Configuration::get('PS_CURRENCY_DEFAULT')),
-				new Currency((int)Configuration::get('PS_CURRENCY_DEFAULT'))
-			).'</td>
-			</tr>
-		</table>';
-
-		return $html;
+		$this->fields_form[0]['form'] = array(
+			'legend' => array(
+				'title' => sprintf($this->l('Loyalty points (%d points)'), $points),
+				'icon' => 'icon-list-alt'
+			),
+			'input' => array(
+				array(
+					'type' => 'loyalty_blocks',
+					'label' => $this->l('Loyalty points'),
+					'name' => 'loyalty_blocks',
+					'values' => LoyaltyModule::getAllByIdCustomer((int)$params['id_customer'], (int)$params['cookie']->id_lang)
+				)
+			)
+		);
+		
+		$helper = $this->initLoyaltyForm($params);
+		$helper->submit_action = '';
+		$helper->title = $this->l('Loyalty points');
+		$helper->fields_value = isset($this->fields_value) ? $this->fields_value : array();
+		return ($helper->generateForm($this->fields_form));
 	}
 
+	public function initLoyaltyToolbar($params)
+	{
+		$current_index = AdminController::$currentIndex;
+		$token = Tools::getAdminTokenLite('AdminCustomers');
+		$back = Tools::safeOutput(Tools::getValue('back', ''));
+		$tokenLoyalty = Tools::getAdminToken('AdminLoyalty'.(int)Tab::getIdFromClassName('AdminLoyalty').(int)$params['cookie']->id_employee);
+		
+		if (!isset($back) || empty($back))
+			$back = $current_index.'&amp;id_customer='.(int)$params['id_customer'].'&viewcustomer&amptoken='.$token;
+
+		switch ($this->_display)
+		{
+			case 'add':
+				$this->toolbar_btn['cancel'] = array(
+					'href' => $back,
+					'desc' => $this->l('Cancel')
+				);
+				break;
+			case 'edit':
+				$this->toolbar_btn['cancel'] = array(
+					'href' => $back,
+					'desc' => $this->l('Cancel')
+				);
+				break;
+			case 'index':
+				$this->toolbar_btn['new'] = array(
+					'href' => 'index.php?controller=AdminLoyalty&amp;token='.$tokenLoyalty.'&amp;addloyalty&amp;id_customer='.(int)$params['id_customer'],
+					'desc' => $this->l('Add new')
+				);
+				break;
+			default:
+				break;
+		}
+		return $this->toolbar_btn;
+	}
+	
+	private function initLoyaltyForm($params)
+	{
+		$helper = new HelperForm();
+
+		$helper->module = $this;
+		$helper->name_controller = 'loyalty';
+		$helper->identifier = $this->identifier;
+		$helper->token = Tools::getAdminToken('AdminOrders'.(int)Tab::getIdFromClassName('AdminOrders').(int)$params['cookie']->id_employee);
+		$helper->languages = $this->context->controller->_languages;
+		$helper->currentIndex = 'index.php?tab=AdminOrders';
+		$helper->default_form_language = $this->context->controller->default_form_language;
+		$helper->allow_employee_form_lang = $this->context->controller->allow_employee_form_lang;
+		$helper->toolbar_scroll = true;
+		$helper->toolbar_btn = $this->initLoyaltyToolbar($params);
+
+		return $helper;
+	}
+	
 	public function hookCancelProduct($params)
 	{
 		include_once(dirname(__FILE__).'/LoyaltyStateModule.php');
@@ -513,7 +588,7 @@ class Loyalty extends Module
 
 		return (array_key_exists($key, $translations)) ? $translations[$key] : $key;
 	}
-
+	
 	public function renderForm()
 	{
 		$order_states = OrderState::getOrderStates($this->context->language->id);
@@ -660,9 +735,6 @@ class Loyalty extends Module
 				)
 			),
 		);
-
-
-
 
 
 		$fields_form_2 = array(
