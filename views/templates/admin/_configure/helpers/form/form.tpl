@@ -117,7 +117,7 @@
 											<div class="btn-group-action">
 												<div class="btn-group pull-right">
 													{if $loyalty_block['id'] == 0}
-														{if $loyalty_block['id_loyalty_state'] <> '4' and $loyalty_block['id_loyalty_state'] <> '3'}
+														{if $loyalty_block['id_loyalty_state'] <> '4'}
 															<a class="btn btn-default" href="index.php?controller=AdminLoyalty&amp;token={$tokenLoyalty}&amp;updateloyalty&amp;id_customer={(int)$loyalty_block['id_customer']}&amp;id_loyalty={(int)$loyalty_block['id_loyalty']}" title="{l s='Edit' mod='loyalty'}">
 																<i class="icon-edit"></i> {l s='Edit' mod='loyalty'}
 															</a>
@@ -131,12 +131,6 @@
 																	</a>
 																</li>
 															</ul>
-														{else}
-															{if $loyalty_block['id_loyalty_state'] <> '4'}
-																<a class="btn btn-default" href="index.php?controller=AdminLoyalty&amp;token={$tokenLoyalty}&amp;deleteloyalty&amp;id_customer={(int)$loyalty_block['id_customer']}&amp;id_loyalty={(int)$loyalty_block['id_loyalty']}" title="{l s='Delete' mod='loyalty'}">
-																	<i class="icon-trash"></i> {l s='Delete' mod='loyalty'}
-																</a>
-															{/if}
 														{/if}
 													{else}
 														<a class="btn btn-default" href="{$current}&amp;id_order={(int)$loyalty_block['id']}&amp;vieworder&amp;token={$token}" title="{l s='View' mod='loyalty'}">

@@ -132,7 +132,11 @@ class AdminLoyaltyController extends ModuleAdminController
 		foreach ($languages as $lang)
 		{
 			$xtmp = LoyaltyModule::getLoyaltyText(Tools::getValue('id_loyalty'), $lang['id_lang']);
-			$this->fields_value['loyalty_text'][$lang['id_lang']] = $xtmp[0]['name'];
+			if(!empty($xtmp)) {
+				$this->fields_value['loyalty_text'][$lang['id_lang']] = $xtmp[0]['name'];
+			} else {
+				$this->fields_value['loyalty_text'][$lang['id_lang']] = '';
+			}
 		}
 		
 		return parent::renderForm();
