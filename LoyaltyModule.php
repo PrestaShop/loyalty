@@ -32,6 +32,7 @@ class LoyaltyModule extends ObjectModel
 	public $id_loyalty_state;
 	public $id_customer;
 	public $id_order;
+	public $id_external_ref;
 	public $id_cart_rule;
 	public $points;
 	public $date_add;
@@ -47,6 +48,7 @@ class LoyaltyModule extends ObjectModel
 			'id_loyalty_state' =>	array('type' => self::TYPE_INT, 'validate' => 'isInt'),
 			'id_customer' =>		array('type' => self::TYPE_INT, 'validate' => 'isInt', 'required' => true),
 			'id_order' =>			array('type' => self::TYPE_INT, 'validate' => 'isInt'),
+			'id_external_ref' =>	array('type' => self::TYPE_INT, 'validate' => 'isInt'),
 			'id_cart_rule' =>		array('type' => self::TYPE_INT, 'validate' => 'isInt'),
 			'points' =>				array('type' => self::TYPE_INT, 'validate' => 'isInt', 'required' => true),
 			'date_add' =>			array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
@@ -159,8 +161,7 @@ class LoyaltyModule extends ObjectModel
 		if ((int)$validity_period > 0)
 			$sql_period = ' AND datediff(NOW(),f.date_add) <= '.$validity_period;
 
-		return
-			Db::getInstance()->getValue('
+		return	Db::getInstance()->getValue('
 		SELECT SUM(f.points) points
 		FROM `'._DB_PREFIX_.'loyalty` f
 		WHERE f.id_customer = '.(int)($id_customer).'
@@ -185,10 +186,11 @@ class LoyaltyModule extends ObjectModel
 			$sql_period = ' AND datediff(NOW(),f.date_add) <= '.$validity_period;
 
 		$query = '
-		SELECT f.id_order AS id, f.date_add AS date, (o.total_paid - o.total_shipping) total_without_shipping, f.points, f.id_loyalty, f.id_loyalty_state, fsl.name state
+		SELECT f.id_order AS id, f.date_add AS date, (o.total_paid - o.total_shipping) total_without_shipping, f.points, f.id_external_ref AS ExternalRef, fs2.name loyalty_text, f.id_customer, f.id_loyalty, f.id_loyalty_state, fsl.name state
 		FROM `'._DB_PREFIX_.'loyalty` f
 		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (f.id_order = o.id_order)
 		LEFT JOIN `'._DB_PREFIX_.'loyalty_state_lang` fsl ON (f.id_loyalty_state = fsl.id_loyalty_state AND fsl.id_lang = '.(int)($id_lang).')
+		LEFT JOIN `'._DB_PREFIX_.'loyalty_text_lang` fs2 ON (f.id_loyalty = fs2.id_loyalty AND fs2.id_lang = '.(int)($id_lang).')
 		WHERE f.id_customer = '.(int)($id_customer).$sql_period;
 		if ($onlyValidate === true)
 			$query .= ' AND f.id_loyalty_state = '.(int)LoyaltyStateModule::getValidationId();
@@ -260,7 +262,23 @@ class LoyaltyModule extends ObjectModel
 
 		return false;
 	}
-
+	
+	public static function getLoyaltyStates($id_lang)
+	{
+		$query = 'SELECT id_loyalty_state, name FROM `'._DB_PREFIX_.'loyalty_state_lang` WHERE `id_lang` = '.$id_lang;
+		return Db::getInstance()->executeS($query);
+	}
+	
+	public static function getLoyaltyText($id_loyalty, $id_lang)
+	{
+		if($id_loyalty == 0) {
+			return '';
+		}  else {
+			$query = 'SELECT name FROM `'._DB_PREFIX_.'loyalty_text_lang` WHERE `id_loyalty` = '.$id_loyalty.' and `id_lang` = '.$id_lang;
+			return Db::getInstance()->executeS($query);
+		}
+	}
+	
 	/* Register all transaction in a specific history table */
 	private function historize()
 	{
