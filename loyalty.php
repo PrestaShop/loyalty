@@ -436,13 +436,14 @@ class Loyalty extends Module
 		$details = LoyaltyModule::getAllByIdCustomer((int)$params['id_customer'], (int)$params['cookie']->id_lang);
 		$points = (int)LoyaltyModule::getPointsByCustomer((int)$params['id_customer']);
 
-		$html = '
-		<br /><h2>'.sprintf($this->l('Loyalty points (%d points)'), $points).'</h2>';
+		$html = '<div class="panel">
+			<div class="panel-heading">'.sprintf($this->l('Loyalty points (%d points)'), $points).'</div>';
 
 		if (!isset($points) || count($details) == 0)
 			return $html.' '.$this->l('This customer has no points');
 
 		$html .= '
+		<div class="panel-body">
 		<table cellspacing="0" cellpadding="0" class="table">
 			<tr style="background-color:#F5E9CF; padding: 0.3em 0.1em;">
 				<th>'.$this->l('Order').'</th>
@@ -473,7 +474,9 @@ class Loyalty extends Module
 				new Currency((int)Configuration::get('PS_CURRENCY_DEFAULT'))
 			).'</td>
 			</tr>
-		</table>';
+		</table>
+		</div>
+		</div>';
 
 		return $html;
 	}
