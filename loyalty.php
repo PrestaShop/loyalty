@@ -42,7 +42,7 @@ class Loyalty extends Module
 	{
 		$this->name = 'loyalty';
 		$this->tab = 'pricing_promotion';
-		$this->version = '1.2.3';
+		$this->version = '0.6.5';
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
