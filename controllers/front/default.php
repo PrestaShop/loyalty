@@ -78,6 +78,7 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			$cart_rule->quantity = 1;
 			$cart_rule->highlight = 1;
 			$cart_rule->quantity_per_user = 1;
+			$cart_rule->reduction_tax = (bool)Configuration::get('PS_LOYALTY_TAX');
 
 			// If merchandise returns are allowed, the voucher musn't be usable before this max return date
 			$date_from = Db::getInstance()->getValue('
