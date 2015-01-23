@@ -46,6 +46,8 @@ class Loyalty extends Module
 		$this->author = 'PrestaShop';
 		$this->need_instance = 0;
 
+		$this->controllers = array('default');
+
 		$this->bootstrap = true;
 		parent::__construct();
 
