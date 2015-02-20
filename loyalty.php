@@ -438,11 +438,11 @@ class Loyalty extends Module
 		$details = LoyaltyModule::getAllByIdCustomer((int)$params['id_customer'], (int)$params['cookie']->id_lang);
 		$points = (int)LoyaltyModule::getPointsByCustomer((int)$params['id_customer']);
 
-		$html = '<div class="panel">
+		$html = '<div class="col-lg-12"><div class="panel">
 			<div class="panel-heading">'.sprintf($this->l('Loyalty points (%d points)'), $points).'</div>';
 
 		if (!isset($points) || count($details) == 0)
-			return $html.' '.$this->l('This customer has no points');
+			return $html.' '.$this->l('This customer has no points').'</div></div>';
 
 		$html .= '
 		<div class="panel-body">
@@ -478,7 +478,7 @@ class Loyalty extends Module
 			</tr>
 		</table>
 		</div>
-		</div>';
+		</div></div>';
 
 		return $html;
 	}
