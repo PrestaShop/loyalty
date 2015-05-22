@@ -204,6 +204,7 @@ class LoyaltyModule extends ObjectModel
 		SELECT f.id_cart_rule AS id_cart_rule, f.date_upd AS date_add
 		FROM `'._DB_PREFIX_.'loyalty` f
 		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (f.`id_order` = o.`id_order`)
+		INNER JOIN `'._DB_PREFIX_.'cart_rule` cr ON (cr.`id_cart_rule` = f.`id_cart_rule`)
 		WHERE f.`id_customer` = '.(int)($id_customer).'
 		AND f.`id_cart_rule` > 0
 		AND o.`valid` = 1
