@@ -219,7 +219,7 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			'nbpagination' => ((int)Tools::getValue('n') > 0 ? (int)Tools::getValue('n') : 10),
 			'nArray' => array(10, 20, 50),
 			'max_page' => floor(count($orders) / ((int)Tools::getValue('n') > 0 ? (int)Tools::getValue('n') : 10)),
-			'pagination_link' => $this->getSummaryPaginationLink(array(), $this->context->smarty)
+			'pagination_link' => Context::getContext()->link->getModuleLink('loyalty','default')
 		));
 
 		/* Discounts */
