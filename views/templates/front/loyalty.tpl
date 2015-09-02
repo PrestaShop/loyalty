@@ -209,7 +209,7 @@ $(document).ready(function()
 		<a href="{$link->getPageLink('my-account', true)|escape:'html'}" title="{l s='Back to Your Account' mod='loyalty'}" rel="nofollow">{l s='Back to Your Account' mod='loyalty'}</a>
 	</li>
 	<li class="f_right">
-		<a href="{$base_dir}" title="{l s='Home' mod='loyalty'}"><img src="{$img_dir}icon/home.gif" alt="" class="icon" /></a>
-		<a href="{$base_dir}" title="{l s='Home' mod='loyalty'}">{l s='Home' mod='loyalty'}</a>
+		<a href="{$content_dir}" title="{l s='Home' mod='loyalty'}"><img src="{$img_dir}icon/home.gif" alt="" class="icon" /></a>
+		<a href="{$content_dir}" title="{l s='Home' mod='loyalty'}">{l s='Home' mod='loyalty'}</a>
 	</li>
 </ul>
