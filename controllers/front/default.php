@@ -90,6 +90,9 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			if (Configuration::get('PS_ORDER_RETURN'))
 				$date_from += 60 * 60 * 24 * (int)Configuration::get('PS_ORDER_RETURN_NB_DAYS');
 
+			if ($date_from < time())
+				$date_from = time();
+
 			$cart_rule->date_from = date('Y-m-d H:i:s', $date_from);
 			$cart_rule->date_to = date('Y-m-d H:i:s', strtotime($cart_rule->date_from.' +1 year'));
 
