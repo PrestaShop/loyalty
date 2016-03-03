@@ -73,6 +73,19 @@ class LoyaltyModule extends ObjectModel
 		return isset($result['id_loyalty']) ? $result['id_loyalty'] : false;
 	}
 
+	public static function getAllByOrderId($id_order)
+	{
+		if (!Validate::isUnsignedId($id_order))
+			return false;
+
+		$result = Db::getInstance()->executeS('
+		SELECT f.id_loyalty
+		FROM `'._DB_PREFIX_.'loyalty` f
+		WHERE f.id_order = '.(int)($id_order));
+
+		return count($result) > 0 ? $result : false;
+	}
+
 	public static function getOrderNbPoints($order)
 	{
 		if (!Validate::isLoadedObject($order))

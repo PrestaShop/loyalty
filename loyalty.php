@@ -404,23 +404,27 @@ class Loyalty extends Module
 
 		if ($new_order->id == $this->loyaltyStateValidation->id_order_state || $new_order->id == $this->loyaltyStateCancel->id_order_state)
 		{
-			if (!Validate::isLoadedObject($loyalty = new LoyaltyModule(LoyaltyModule::getByOrderId($order->id))))
-				return false;
-			if ((int)Configuration::get('PS_LOYALTY_NONE_AWARD') && $loyalty->id_loyalty_state == LoyaltyStateModule::getNoneAwardId())
-				return true;
+			foreach (LoyaltyModule::getAllByOrderId($order->id) as $k => $loyal)
+			{
+				if (!Validate::isLoadedObject($loyalty = new LoyaltyModule($loyal['id_loyalty'])))
+					return false;
+				if ((int)Configuration::get('PS_LOYALTY_NONE_AWARD') && $loyalty->id_loyalty_state == LoyaltyStateModule::getNoneAwardId())
+					return true;
 
-			if ($new_order->id == $this->loyaltyStateValidation->id_order_state)
-			{
-				$loyalty->id_loyalty_state = LoyaltyStateModule::getValidationId();
-				if ((int)$loyalty->points < 0)
-					$loyalty->points = abs((int)$loyalty->points);
+				if ($new_order->id == $this->loyaltyStateValidation->id_order_state)
+				{
+					$loyalty->id_loyalty_state = LoyaltyStateModule::getValidationId();
+					if ((int)$loyalty->points < 0)
+						$loyalty->points = abs((int)$loyalty->points);
+				}
+				elseif ($new_order->id == $this->loyaltyStateCancel->id_order_state)
+				{
+					$loyalty->id_loyalty_state = LoyaltyStateModule::getCancelId();
+					$loyalty->points = 0;
+				}
+
+				$loyalty->save();
 			}
-			elseif ($new_order->id == $this->loyaltyStateCancel->id_order_state)
-			{
-				$loyalty->id_loyalty_state = LoyaltyStateModule::getCancelId();
-				$loyalty->points = 0;
-			}
-			return $loyalty->save();
 		}
 		return true;
 	}
