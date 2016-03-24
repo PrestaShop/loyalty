@@ -409,7 +409,7 @@ class Loyalty extends Module
 			if ((int)Configuration::get('PS_LOYALTY_NONE_AWARD') && $loyalty->id_loyalty_state == LoyaltyStateModule::getNoneAwardId())
 				return true;
 
-			if ($new_order->id == $this->loyaltyStateValidation->id_order_state)
+			if ($new_order->id == $this->loyaltyStateValidation->id_order_state && $loyalty->id_cart_rule == 0)
 			{
 				$loyalty->id_loyalty_state = LoyaltyStateModule::getValidationId();
 				if ((int)$loyalty->points < 0)
