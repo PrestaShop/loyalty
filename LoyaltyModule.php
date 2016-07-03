@@ -77,7 +77,16 @@ class LoyaltyModule extends ObjectModel
 	{
 		if (!Validate::isLoadedObject($order))
 			return false;
-		return self::getCartNbPoints(new Cart((int)$order->id_cart));
+		
+		$total_paid = 0;
+		$taxesEnabled = Product::getTaxCalculationMethod();
+		if ($taxesEnabled == PS_TAX_EXC){
+			$total_paid += $order->total_paid_tax_excl;
+		} else {
+			$total_paid += $order->total_paid_tax_incl;
+		}
+
+		return self::getNbPointsByPrice($total_paid);
 	}
 
 	public static function getCartNbPoints($cart, $newProduct = NULL)
