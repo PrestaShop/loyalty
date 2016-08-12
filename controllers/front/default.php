@@ -66,7 +66,7 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			/* Generate a voucher code */
 			$voucher_code = null;
 			do
-				$voucher_code = 'FID'.rand(1000, 100000);
+				$voucher_code = 'FID'.(int)$this->context->customer->id.rand(1000, 100000);
 			while (CartRule::cartRuleExists($voucher_code));
 
 			// Voucher creation and affectation to the customer
