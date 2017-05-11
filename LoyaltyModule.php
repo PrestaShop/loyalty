@@ -117,11 +117,15 @@ class LoyaltyModule extends ObjectModel
 				}
 				$total += ($taxesEnabled == PS_TAX_EXC ? $product['price'] : $product['price_wt'])* (int)($product['cart_quantity']);
 			}
-			foreach ($cart->getCartRules(false) AS $cart_rule)
+			foreach ($cart->getCartRules(false) AS $cart_rule) {
+				if ($cart_rule['free_shipping']) {
+					$total += $cart->getTotalShippingCost(null, ($taxesEnabled == PS_TAX_EXC ? false : true));
+				}
 				if ($taxesEnabled == PS_TAX_EXC)
 					$total -= $cart_rule['value_tax_exc'];
 				else
 					$total -= $cart_rule['value_real'];
+			}
 
 		}
 
