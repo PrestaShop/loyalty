@@ -493,11 +493,11 @@ class Loyalty extends Module
 			return false;
 
 		$taxesEnabled = Product::getTaxCalculationMethod();
+		$unit_price = ($taxesEnabled == PS_TAX_EXC) ? $order_detail->unit_price_tax_excl : $order_detail->unit_price_tax_incl;
+		$qty = isset($params['product_quantity']) ? $params['product_quantity'] : $order_detail->product_quantity;
+
 		$loyalty_new = new LoyaltyModule();
-		if ($taxesEnabled == PS_TAX_EXC)
-			$loyalty_new->points = -1 * LoyaltyModule::getNbPointsByPrice(number_format($order_detail->total_price_tax_excl, 2, '.', ''));
-		else
-			$loyalty_new->points = -1 * LoyaltyModule::getNbPointsByPrice(number_format($order_detail->total_price_tax_incl, 2, '.', ''));
+		$loyalty_new->points = -1 * LoyaltyModule::getNbPointsByPrice(number_format($unit_price * $qty, 2, '.', ''));
 		$loyalty_new->id_loyalty_state = (int)LoyaltyStateModule::getCancelId();
 		$loyalty_new->id_order = (int)$params['order']->id;
 		$loyalty_new->id_customer = (int)$loyalty->id_customer;
