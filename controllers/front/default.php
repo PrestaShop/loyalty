@@ -250,10 +250,11 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 			foreach ($all_categories as $k => $all_category)
 				if (in_array($all_category['id_category'], $voucher_categories))
 					$categories_names[$all_category['id_category']] = trim($all_category['name']);
-			if (!empty($categories_names))
-				$categories_names = Tools::truncate(implode(', ', $categories_names), 100).'.';
-			else
+			if (!empty($categories_names)) {
+				$categories_names = mb_strimwidth(implode(', ', $categories_names), 0, 100, '...', 'utf-8');
+			} else {
 				$categories_names = null;
+			}
 		}
 		$this->context->smarty->assign(array(
 			'nbDiscounts' => (int)$nb_discounts,
