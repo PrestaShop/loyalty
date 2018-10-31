@@ -22,8 +22,12 @@
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * International Registered Trademark & Property of PrestaShop SA
 *}
-<li class="loyalty">
-  <a href="{$link->getModuleLink('loyalty', 'default', ['process' => 'summary'], true)|escape:'html'}" title="{l s='My loyalty points' mod='loyalty'}" rel="nofollow">
-    <img src="{$module_template_dir}images/loyalty.gif" alt="{l s='My loyalty points' mod='loyalty'}" class="icon"/> {l s='My loyalty points' mod='loyalty'}
-  </a>
-</li>
+<a class="col-lg-4 col-md-6 col-sm-6 col-xs-12"
+   id="loyalty-link"
+   href="{url entity='module' name='loyalty' controller='default'}"
+>
+    <span class="link-item">
+      <i class="material-icons">card_membership</i>
+      {l s='My loyalty points' d='Modules.Loyalty.Front'}
+    </span>
+</a>

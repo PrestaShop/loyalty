@@ -257,7 +257,6 @@ class LoyaltyModule extends ObjectModel
      */
     public static function getAllByIdCustomer($idCustomer, $idLang, $onlyValidate = false, $pagination = false, $nb = 10, $page = 1)
     {
-
         $validityPeriod = Configuration::get('PS_LOYALTY_VALIDITY_PERIOD');
         $sqlPeriod = '';
         if ((int) $validityPeriod > 0) {

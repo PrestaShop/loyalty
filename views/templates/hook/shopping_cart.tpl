@@ -22,15 +22,15 @@
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * International Registered Trademark & Property of PrestaShop SA
 *}
-
-{*<p id="loyalty">*}
-	{*<img src="{$module_template_dir}images/loyalty.gif" alt="{l s='loyalty' mod='loyalty'}" class="icon" />*}
-	{*{if $points > 0}*}
-		{*{l s='By checking out this shopping cart you can collect up to' mod='loyalty'} <b>*}
-		{*{if $points > 1}{l s='%d loyalty points' sprintf=$points mod='loyalty'}{else}{l s='%d loyalty point' sprintf=$points mod='loyalty'}{/if}</b>*}
-		{*{l s='that can be converted into a voucher of' mod='loyalty'} {convertPrice price=$voucher}{if isset($guest_checkout) && $guest_checkout}<sup>*</sup>{/if}.<br />*}
-		{*{if isset($guest_checkout) && $guest_checkout}<sup>*</sup> {l s='Not available for Instant checkout order' mod='loyalty'}{/if}*}
-	{*{else}*}
-		{*{l s='Add some products to your shopping cart to collect some loyalty points.' mod='loyalty'}*}
-	{*{/if}*}
-{*</p>*}
+<p id="loyalty" style="margin-top: 20px">
+  <i class="material-icons">card_membership</i>
+  {if $points > 0}
+    {l s='By checking out this shopping cart you can collect up to' d='Modules.Loyalty.Front'}
+    <strong>{if $points > 1}{l s='%d loyalty points' sprintf=[$points] d='Modules.Loyalty.Front'}{else}{l s='%d loyalty point' sprintf=[$points] d='Modules.Loyalty.Front'}{/if}</strong>
+    {l s='that can be converted into a voucher of' d='Modules.Loyalty.Front'} {Tools::displayPrice($voucher)}{if isset($guest_checkout) && $guest_checkout}<sup>*</sup>{/if}.
+    <br/>
+    {if isset($guest_checkout) && $guest_checkout}<sup>*</sup>{l s='Not available for Instant checkout order' d='Modules.Loyalty.Front'}{/if}
+  {else}
+    {l s='Add some products to your shopping cart to collect some loyalty points.' d='Modules.Loyalty.Front'}
+  {/if}
+</p>

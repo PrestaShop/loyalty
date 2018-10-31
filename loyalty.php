@@ -93,7 +93,7 @@ class Loyalty extends Module
             return false;
         }
 
-        $this->registerHook('extraRight');
+        $this->registerHook('productActions');
         $this->registerHook('updateOrderStatus');
         $this->registerHook('newOrder');
         $this->registerHook('adminCustomers');
@@ -341,7 +341,7 @@ class Loyalty extends Module
      * @throws PrestaShopException
      * @throws SmartyException
      */
-    public function hookExtraRight($params)
+    public function hookProductActions($params)
     {
         $product = new Product((int) Tools::getValue('id_product'));
         if (Validate::isLoadedObject($product)) {
@@ -378,7 +378,7 @@ class Loyalty extends Module
 
             $this->context->controller->addJS($this->_path.'js/loyalty.js');
 
-            return $this->display(__FILE__, 'product.tpl');
+            return $this->fetch("module:{$this->name}/views/templates/hook/product.tpl");
         }
 
         return false;
@@ -394,18 +394,16 @@ class Loyalty extends Module
      */
     public function hookCustomerAccount()
     {
-        return $this->display(__FILE__, 'my-account.tpl');
+        return $this->fetch("module:{$this->name}/views/templates/hook/my_account.tpl");
     }
 
     /**
-     * @param array $params
-     *
      * @return string
      * @throws SmartyException
      */
-    public function hookDisplayMyAccountBlock($params)
+    public function hookDisplayMyAccountBlock()
     {
-        return $this->hookCustomerAccount($params);
+        return $this->fetch("module:{$this->name}/views/templates/hook/footer_link.tpl");
     }
 
     /**
@@ -466,7 +464,7 @@ class Loyalty extends Module
             $this->smarty->assign(['points' => 0]);
         }
 
-        return $this->display(__FILE__, 'shopping-cart.tpl');
+        return $this->fetch("module:{$this->name}/views/templates/hook/shopping_cart.tpl");
     }
 
     /**
@@ -712,7 +710,6 @@ class Loyalty extends Module
                     ],
                     [
                         'type'    => 'switch',
-                        'is_bool' => true, //retro-compat
                         'label'   => $this->trans('Apply taxes on the voucher', [], 'Modules.Loyalty.Admin'),
                         'name'    => 'PS_LOYALTY_TAX',
                         'values'  => [
@@ -750,7 +747,6 @@ class Loyalty extends Module
                     ],
                     [
                         'type'    => 'switch',
-                        'is_bool' => true, //retro-compat
                         'label'   => $this->trans('Give points on discounted products', [], 'Modules.Loyalty.Admin'),
                         'name'    => 'PS_LOYALTY_NONE_AWARD',
                         'values'  => [
@@ -776,24 +772,6 @@ class Loyalty extends Module
                             'id'                  => 'categoryBox',
                             'use_checkbox'        => true,
                             'selected_categories' => $selected_categories,
-                        ],
-                        //retro compat 1.5 for category tree
-                        'values' => [
-                            'trads'               => [
-                                'Root'         => $rootCategory,
-                                'selected'     => $this->trans('Selected', [], 'Modules.Loyalty.Admin'),
-                                'Collapse All' => $this->trans('Collapse All', [], 'Modules.Loyalty.Admin'),
-                                'Expand All'   => $this->trans('Expand All', [], 'Modules.Loyalty.Admin'),
-                                'Check All'    => $this->trans('Check All', [], 'Modules.Loyalty.Admin'),
-                                'Uncheck All'  => $this->trans('Uncheck All', [], 'Modules.Loyalty.Admin'),
-                            ],
-                            'selected_cat'        => $selected_categories,
-                            'input_name'          => 'categoryBox[]',
-                            'use_radio'           => false,
-                            'use_search'          => false,
-                            'disabled_categories' => [],
-                            'top_category'        => Category::getTopCategory(),
-                            'use_context'         => true,
                         ],
                     ],
                 ],

@@ -24,11 +24,17 @@
  * International Registered Trademark & Property of PrestaShop SA
  */
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * @since 1.5.0
  */
 class LoyaltyDefaultModuleFrontController extends ModuleFrontController
 {
+    const MAX_ITEMS_PER_PAGE = 10;
+
     /** @var bool $ssl */
     public $ssl = true;
     /** @var bool $display_column_left */
@@ -45,9 +51,6 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
         parent::__construct();
 
         $this->context = Context::getContext();
-
-        // Declare smarty function to render pagination link
-        smartyRegisterFunction($this->context->smarty, 'function', 'summarypaginationlink', ['LoyaltyDefaultModuleFrontController', 'getSummaryPaginationLink']);
     }
 
     /**
@@ -165,85 +168,112 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
     public function initContent()
     {
         parent::initContent();
+
         $this->context->controller->addJqueryPlugin(['dimensions', 'cluetip']);
 
-        if (Tools::getValue('process') == 'summary') {
+        if (Tools::getValue('process') === 'summary') {
             $this->assignSummaryExecution();
         }
-    }
 
-    /**
-     * Render pagination link for summary
-     *
-     * @param array $params Array with to parameters p (for page number) and n (for nb of items per page)
-     *
-     * @return string link
-     * @throws PrestaShopException
-     */
-    public static function getSummaryPaginationLink($params, &$smarty)
-    {
-        if (!isset($params['p'])) {
-            $p = 1;
-        } else {
-            $p = $params['p'];
+        if (!$this->template) {
+            // Redirect to summary page when the template is undefined
+            Tools::redirectLink($this->context->link->getModuleLink($this->module->name, 'default', ['process' => 'summary'], true));
         }
-
-        if (!isset($params['n'])) {
-            $n = 10;
-        } else {
-            $n = $params['n'];
-        }
-
-        return Context::getContext()->link->getModuleLink(
-            'loyalty',
-            'default',
-            [
-                'process' => 'summary',
-                'p'       => $p,
-                'n'       => $n,
-            ]
-        );
     }
 
     /**
      * Assign summary template
+     *
+     * @throws PrestaShopException
      */
     public function assignSummaryExecution()
     {
-        $customer_points = (int) LoyaltyModule::getPointsByCustomer((int) $this->context->customer->id);
+        $customerPoints = (int) LoyaltyModule::getPointsByCustomer((int) $this->context->customer->id);
         $orders = LoyaltyModule::getAllByIdCustomer((int) $this->context->customer->id, (int) $this->context->language->id);
+        $page = (int) Tools::getValue('p') > 0 ? (int) Tools::getValue('p') : 1;
+        $numberPerPage = (int) Tools::getValue('n') > 0 ? (int) Tools::getValue('n') : static::MAX_ITEMS_PER_PAGE;
         $displayorders = LoyaltyModule::getAllByIdCustomer(
             (int) $this->context->customer->id,
             (int) $this->context->language->id, false, true,
-            ((int) Tools::getValue('n') > 0 ? (int) Tools::getValue('n') : 10),
-            ((int) Tools::getValue('p') > 0 ? (int) Tools::getValue('p') : 1)
+            $numberPerPage,
+            $page
         );
+        $maxPage = (int) ceil(count($orders) / static::MAX_ITEMS_PER_PAGE);
+        $pagination = null;
+        if (count($orders) > static::MAX_ITEMS_PER_PAGE) {
+            $pagination = [
+                'items_shown_from'    => (($page - 1) * $numberPerPage) + 1,
+                'items_shown_to'      => ($page * $numberPerPage) + 1,
+                'total_items'         => count($orders),
+                'should_be_displayed' => true,
+                'pages'               => array_merge(array_filter([
+                    [
+                        'current'   => $page === 1,
+                        'type'      => 'previous',
+                        'clickable' => true,
+                        'url'       => $this->context->link->getModuleLink(
+                            $this->module->name,
+                            'default',
+                            ['process' => 'summary', 'n' => $numberPerPage, 'p' => $page - 1],
+                            Tools::usingSecureMode()
+                        ),
+                    ],
+                ], function () use ($page) {
+                    return $page !== 1;
+                }), array_map(function ($currentPage) use ($numberPerPage, $page) {
+                    $currentPage = (int) $currentPage;
+                    return [
+                        'current'   => $currentPage === $page,
+                        'type'      => '',
+                        'page'      => $currentPage,
+                        'clickable' => $currentPage !== $page,
+                        'url'       => $this->context->link->getModuleLink(
+                            $this->module->name,
+                            'default',
+                            ['process' => 'summary', 'n' => $numberPerPage, 'p' => $currentPage],
+                            Tools::usingSecureMode()
+                        ),
+                    ];
+                }, range(1, $maxPage)), array_filter([
+                    [
+                        'current'   => $page === $maxPage,
+                        'type'      => 'next',
+                        'clickable' => true,
+                        'url'       => $this->context->link->getModuleLink(
+                            $this->module->name,
+                            'default',
+                            ['process' => 'summary', 'n' => $numberPerPage, 'p' => $page + 1],
+                            Tools::usingSecureMode()
+                        ),
+                    ],
+                ], function () use ($page, $maxPage) {
+                    return $page !== $maxPage;
+                })),
+            ];
+        }
+
         $this->context->smarty->assign([
             'orders'                 => $orders,
             'displayorders'          => $displayorders,
-            'totalPoints'            => (int) $customer_points,
-            'voucher'                => LoyaltyModule::getVoucherValue($customer_points, (int) $this->context->currency->id),
+            'totalPoints'            => (int) $customerPoints,
+            'voucher'                => LoyaltyModule::getVoucherValue($customerPoints, (int) $this->context->currency->id),
             'validation_id'          => LoyaltyStateModule::getValidationId(),
-            'transformation_allowed' => $customer_points > 0,
-            'page'                   => ((int) Tools::getValue('p') > 0 ? (int) Tools::getValue('p') : 1),
-            'nbpagination'           => ((int) Tools::getValue('n') > 0 ? (int) Tools::getValue('n') : 10),
-            'nArray'                 => [10, 20, 50],
-            'max_page'               => floor(count($orders) / ((int) Tools::getValue('n') > 0 ? (int) Tools::getValue('n') : 10)),
-            'pagination_link'        => Context::getContext()->link->getModuleLink('loyalty', 'default'),
+            'transformation_allowed' => $customerPoints > 0,
+            'pagination'             => $pagination,
         ]);
 
         /* Discounts */
-        $nb_discounts = 0;
+        $nbDiscounts = 0;
         $discounts = [];
-        if ($ids_discount = LoyaltyModule::getDiscountByIdCustomer((int) $this->context->customer->id)) {
-            $nb_discounts = count($ids_discount);
-            foreach ($ids_discount as $key => $discount) {
+        if ($idsDiscount = LoyaltyModule::getDiscountByIdCustomer((int) $this->context->customer->id)) {
+            $nbDiscounts = count($idsDiscount);
+            foreach ($idsDiscount as $key => $discount) {
                 $discounts[$key] = new CartRule((int) $discount['id_cart_rule'], (int) $this->context->cookie->id_lang);
                 $discounts[$key]->orders = LoyaltyModule::getOrdersByIdDiscount((int) $discount['id_cart_rule']);
             }
         }
 
-        $all_categories = Category::getSimpleCategories((int) $this->context->cookie->id_lang);
+        $allCategories = Category::getSimpleCategories((int) $this->context->cookie->id_lang);
         $voucherCategories = Configuration::get('PS_LOYALTY_VOUCHER_CATEGORY');
         if ($voucherCategories != '' && $voucherCategories != 0) {
             $voucherCategories = explode(',', Configuration::get('PS_LOYALTY_VOUCHER_CATEGORY'));
@@ -251,13 +281,13 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
             die(Tools::displayError());
         }
 
-        if (count($voucherCategories) == count($all_categories)) {
+        if (count($voucherCategories) == count($allCategories)) {
             $categoriesNames = null;
         } else {
             $categoriesNames = [];
-            foreach ($all_categories as $k => $all_category) {
-                if (in_array($all_category['id_category'], $voucherCategories)) {
-                    $categoriesNames[$all_category['id_category']] = trim($all_category['name']);
+            foreach ($allCategories as $k => $allCategory) {
+                if (in_array($allCategory['id_category'], $voucherCategories)) {
+                    $categoriesNames[$allCategory['id_category']] = trim($allCategory['name']);
                 }
             }
             if (!empty($categoriesNames)) {
@@ -267,12 +297,12 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
             }
         }
         $this->context->smarty->assign([
-            'nbDiscounts'    => (int) $nb_discounts,
+            'nbDiscounts'    => (int) $nbDiscounts,
             'discounts'      => $discounts,
             'minimalLoyalty' => (float) Configuration::get('PS_LOYALTY_MINIMAL'),
             'categories'     => $categoriesNames,
         ]);
 
-        $this->setTemplate('module:loyalty/views/templates/front/loyalty.tpl');
+        $this->setTemplate("module:{$this->module->name}/views/templates/front/loyalty.tpl");
     }
 }
