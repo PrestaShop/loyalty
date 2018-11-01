@@ -68,6 +68,11 @@
         // Immediately remove ajax pagination hooks
         [].slice.call(document.querySelectorAll('nav.pagination a')).forEach(function (element) {
           element.className = element.className.replace('js-search-link', '');
+          if (element.className.indexOf('disabled') > -1) {
+            element.style.pointerEvents = 'none';
+            element.style.cursor = 'default';
+            element.href = '#';
+          }
         });
       </script>
     {/if}
