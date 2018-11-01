@@ -78,7 +78,7 @@
 
     {if $transformation_allowed}
       <p style="text-align:center; margin-top:20px">
-        <a href="{$link->getModuleLink('loyalty', 'default', ['process' => 'transformpoints'])}"
+        <a href="{url entity='module' name='loyalty' controller='default' params=['process' => 'transformpoints']}"
            onclick="return confirm('{l s='Are you sure you want to transform your points into vouchers?' d='Modules.Loyalty.Front' js=1}');"
         >{l s='Transform my points into a voucher of' d='Modules.Loyalty.Front'}
           <span class="price">{Tools::displayPrice($voucher)}</span>.
