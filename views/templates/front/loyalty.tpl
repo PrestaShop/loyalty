@@ -64,6 +64,12 @@
 
     {if $pagination}
       {include file='_partials/pagination.tpl'}
+      <script type="text/javascript">
+        // Immediately remove ajax pagination hooks
+        [].slice.call(document.querySelectorAll('nav.pagination a')).forEach(function (element) {
+          element.className = element.className.replace('js-search-link', '');
+        });
+      </script>
     {/if}
 
     <br/>
