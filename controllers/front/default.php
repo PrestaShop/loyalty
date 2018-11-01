@@ -202,8 +202,8 @@ class LoyaltyDefaultModuleFrontController extends ModuleFrontController
         $pagination = null;
         if (count($orders) > static::MAX_ITEMS_PER_PAGE) {
             $pagination = [
-                'items_shown_from'    => (($page - 1) * $numberPerPage) + 1,
-                'items_shown_to'      => ($page * $numberPerPage) + 1,
+                'items_shown_from'    => max((($page - 1) * $numberPerPage) + 1, 1),
+                'items_shown_to'      => min($page * $numberPerPage, count($orders)),
                 'total_items'         => count($orders),
                 'should_be_displayed' => true,
                 'pages'               => array_merge(array_filter([
