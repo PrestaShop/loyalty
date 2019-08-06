@@ -4,6 +4,8 @@
 
 Provide a loyalty program to your customers.
 
+Warning : This module is not compatible with prestashop 1.7
+
 ## Contributing
 
 PrestaShop modules are open-source extensions to the PrestaShop e-commerce solution. Everyone is welcome and even encouraged to contribute with their own improvements.
